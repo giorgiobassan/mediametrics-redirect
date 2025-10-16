@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instagram OAuth Callback - MediaMetrics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
+        a { 
+            color: #74c0fc; 
+            text-decoration: none; 
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        a:hover { 
+            text-decoration: none; 
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        h2 { margin-top: 0; }
+        p { margin: 10px 0; }
+        .loading {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            const state = urlParams.get('state');
+            
+            // Log for debugging
+            console.log('Instagram OAuth Callback received:');
+            console.log('Code:', code);
+            console.log('Error:', error);
+            console.log('Error Description:', errorDescription);
+            console.log('State:', state);
+            
+            if (error) {
+                document.body.innerHTML = `
+                    <div class="container">
+                        <h2 class="error">❌ Authentication Error</h2>
+                        <p><strong>Error:</strong> ${error}</p>
+                        <p><strong>Description:</strong> ${errorDescription || 'Unknown error'}</p>
+                        <a href="mediainstagram://oauth/callback?error=${encodeURIComponent(error)}${errorDescription ? '&error_description=' + encodeURIComponent(errorDescription) : ''}">Return to MediaMetrics App</a>
+                    </div>
+                `;
+            } else if (code) {
+                // Build redirect URL with all parameters
+                let redirectUrl = 'mediainstagram://oauth/callback?code=' + encodeURIComponent(code);
+                
+                if (state) {
+                    redirectUrl += '&state=' + encodeURIComponent(state);
+                }
+                
+                // Redirect to the app
+                window.location.href = redirectUrl;
+                
+                document.body.innerHTML = `
+                    <div class="container">
+                        <h2 class="success">✅ Success!</h2>
+                        <p class="loading">Redirecting to MediaMetrics...</p>
+                        <a href="${redirectUrl}">Click here if redirect doesn't work</a>
+                    </div>
+                `;
+            } else {
+                document.body.innerHTML = `
+                    <div class="container">
+                        <h2 class="warning">⚠️ No parameters received</h2>
+                        <p>No authorization code or error was received from Instagram.</p>
+                        <a href="mediainstagram://oauth/callback">Return to MediaMetrics App</a>
+                    </div>
+                `;
+            }
+        </script>
+    </div>
+</body>
+</html>
